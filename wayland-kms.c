@@ -50,6 +50,14 @@
 #	define WLKMS_DEBUG(s, x...) { }
 #endif
 
+/*
+ * Taken from EGL/egl.h. Better to refer the egl.h
+ * in the future.
+ */
+#ifndef EGL_TEXTURE_RGBA
+#	define EGL_TEXTURE_RGBA		0x305E
+#endif
+
 struct wl_kms {
 	struct wl_display *display;
 	int fd;				/* FD for DRM */
@@ -272,7 +280,7 @@ int wayland_kms_query_buffer(struct wl_kms *kms, struct wl_resource *resource,
 		return 0;
 	
 	case WL_KMS_TEXTURE_FORMAT:
-		*value = WL_KMS_FORMAT_ARGB8888;
+		*value = EGL_TEXTURE_RGBA;
 		return 0;
 	}
 
