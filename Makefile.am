@@ -1,6 +1,7 @@
 lib_LTLIBRARIES = libwayland-kms.la
 
 AM_CFLAGS = -I$(top_srcdir)/include \
+	    -Wall \
 	    $(DEFINES) \
 	    $(WAYLAND_CFLAGS) 
 
