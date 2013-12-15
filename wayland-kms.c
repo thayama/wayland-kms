@@ -204,7 +204,8 @@ struct wl_kms *wayland_kms_init(struct wl_display *display, char *device_name, i
 {
 	struct wl_kms *kms;
 
-	kms = malloc(sizeof *kms);
+	if (!(kms = calloc(1, sizeof(struct wl_kms))))
+		return NULL;
 
 	kms->display = display;
 	kms->device_name = strdup(device_name);
