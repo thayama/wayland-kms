@@ -80,7 +80,8 @@ struct wl_kms_buffer {
 
 struct wl_kms_buffer *wayland_kms_buffer_get(struct wl_resource *resource);
 
-struct wl_kms *wayland_kms_init(struct wl_display *display, char *device_name, int fd);
+struct wl_kms *wayland_kms_init(struct wl_display *display,
+			        struct wl_display *server, char *device_name, int fd);
 
 void wayland_kms_uninit(struct wl_kms *kms);
 

@@ -41,6 +41,7 @@
 #include <xf86drm.h>
 #include <wayland-server.h>
 #include "wayland-kms.h"
+#include "wayland-kms-auth.h"
 #include "wayland-kms-server-protocol.h"
 
 #if defined(DEBUG)
@@ -53,7 +54,13 @@ struct wl_kms {
 	struct wl_display *display;
 	int fd;				/* FD for DRM */
 	char *device_name;
+
+	struct kms_auth *auth;		/* for nested authentication */
 };
+
+/*
+ * wl_kms server
+ */
 
 static void destroy_buffer(struct wl_resource *resource)
 {
@@ -80,7 +87,13 @@ kms_authenticate(struct wl_client *client, struct wl_resource *resource,
 
 	WLKMS_DEBUG("%s: %s: magic=%lu\n", __FILE__, __func__, magic);
 
-	if (drmAuthMagic(kms->fd, magic) < 0) {
+	if (kms->auth) {
+		err = kms_auth_request(kms->auth, magic);
+	} else {
+		err = drmAuthMagic(kms->fd, magic);
+	}
+
+	if (err < 0) {
 		wl_resource_post_error(resource, WL_KMS_ERROR_AUTHENTICATION_FAILED,
 				       "authentication failed");
 		WLKMS_DEBUG("%s: %s: authentication failed.\n", __FILE__, __func__);
@@ -200,7 +213,8 @@ struct wl_kms_buffer *wayland_kms_buffer_get(struct wl_resource *resource)
 		return NULL;
 }
 
-struct wl_kms *wayland_kms_init(struct wl_display *display, char *device_name, int fd)
+struct wl_kms *wayland_kms_init(struct wl_display *display,
+				struct wl_display *server, char *device_name, int fd)
 {
 	struct wl_kms *kms;
 
@@ -212,6 +226,17 @@ struct wl_kms *wayland_kms_init(struct wl_display *display, char *device_name, i
 	kms->fd = fd;
 
 	wl_global_create(display, &wl_kms_interface, 1, kms, bind_kms);
+
+	/*
+	 * we're the server in the middle. we should forward the auth
+	 * request to our server.
+	 */
+	if (server) {
+		if (!(kms->auth = kms_auth_init(server))) {
+			free(kms);
+			kms = NULL;
+		}
+	}
 
 	return kms;
 }
