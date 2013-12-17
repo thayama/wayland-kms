@@ -240,13 +240,25 @@ struct wl_kms *wayland_kms_init(struct wl_display *display,
 	 * request to our server.
 	 */
 	if (server) {
-		if (!(kms->auth = kms_auth_init(server))) {
-			free(kms);
-			kms = NULL;
-		}
+		drm_magic_t magic;
+
+		if (!(kms->auth = kms_auth_init(server)))
+			goto error;
+
+		/* get a magic */
+		if (drmGetMagic(fd, &magic) < 0)
+			goto error;
+
+		/* authenticate myself */
+		if (kms_auth_request(kms->auth, magic) < 0)
+			goto error;
 	}
 
 	return kms;
+
+error:
+	free(kms);
+	return NULL;
 }
 
 void wayland_kms_uninit(struct wl_kms *kms)
