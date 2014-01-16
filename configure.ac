@@ -24,6 +24,7 @@ fi
 
 # Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES([WAYLAND_SERVER], [wayland-server])
+PKG_CHECK_MODULES([WAYLAND_CLIENT], [wayland-client])
 PKG_CHECK_MODULES([LIBDRM], [libdrm])
 
 AC_CONFIG_FILES([Makefile wayland-kms.pc])

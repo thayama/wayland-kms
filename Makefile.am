@@ -22,6 +22,7 @@ libwayland_kms_la_CFLAGS = \
 
 libwayland_kms_la_LIBADD = \
 	@WAYLAND_SERVER_LIBS@ \
+	@WAYLAND_CLIENT_LIBS@ \
 	@LIBDRM_LIBS@
 
 extdir = $(includedir)
