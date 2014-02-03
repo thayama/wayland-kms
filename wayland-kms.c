@@ -73,6 +73,16 @@ struct wl_kms {
 static void destroy_buffer(struct wl_resource *resource)
 {
 	struct wl_kms_buffer *buffer = resource->data;
+	struct drm_gem_close close;
+	int ret;
+	if (buffer->handle) {
+		close.handle = buffer->handle;
+		ret = drmIoctl(buffer->kms->fd, DRM_IOCTL_GEM_CLOSE, &close);
+		if (ret)
+			WLKMS_DEBUG("%s: %s: DRM_IOCTL_GEM_CLOSE failed.(%s)\n",
+				 __FILE__, __func__, strerror(errno));
+	}
+
 	free(buffer);
 }
 
