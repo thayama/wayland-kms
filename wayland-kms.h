@@ -43,6 +43,8 @@ struct wl_kms_buffer {
 	int fd;
 };
 
+int wayland_kms_fd_get(struct wl_kms *kms);
+
 struct wl_kms_buffer *wayland_kms_buffer_get(struct wl_resource *resource);
 
 struct wl_kms *wayland_kms_init(struct wl_display *display,

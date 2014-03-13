@@ -219,6 +219,11 @@ bind_kms(struct wl_client *client, void *data, uint32_t version, uint32_t id)
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_XRGB8888);
 }
 
+int wayland_kms_fd_get(struct wl_kms* kms)
+{
+	return kms->fd;
+}
+
 struct wl_kms_buffer *wayland_kms_buffer_get(struct wl_resource *resource)
 {
 	if (resource == NULL)
