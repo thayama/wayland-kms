@@ -41,6 +41,7 @@ struct wl_kms_buffer {
 	uint32_t stride, format;
 	uint32_t handle;
 	int fd;
+	void *private;
 };
 
 int wayland_kms_fd_get(struct wl_kms *kms);
