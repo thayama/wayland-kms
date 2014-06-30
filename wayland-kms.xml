@@ -114,7 +114,7 @@
          surface must have a prime FD. -->
     <request name="create_buffer">
       <arg name="id" type="new_id" interface="wl_buffer"/>
-      <arg name="fd" type="int"/>	<!-- KMS BO Prime FD -->
+      <arg name="fd" type="fd"/>	<!-- KMS BO Prime FD -->
       <arg name="width" type="int"/>
       <arg name="height" type="int"/>
       <arg name="stride" type="uint"/>

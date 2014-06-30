@@ -75,6 +75,7 @@ static void destroy_buffer(struct wl_resource *resource)
 	struct wl_kms_buffer *buffer = resource->data;
 	struct drm_gem_close close;
 	int ret;
+
 	if (buffer->handle) {
 		close.handle = buffer->handle;
 		ret = drmIoctl(buffer->kms->fd, DRM_IOCTL_GEM_CLOSE, &close);
@@ -155,7 +156,7 @@ kms_create_buffer(struct wl_client *client, struct wl_resource *resource,
 	buffer->fd = prime_fd;
 
 	WLKMS_DEBUG("%s: %s: prime_fd=%d\n", __FILE__, __func__, prime_fd);
-#if 0
+
 	if ((err = drmPrimeFDToHandle(kms->fd, prime_fd, &buffer->handle))) {
 		WLKMS_DEBUG("%s: %s: drmPrimeFDToHandle() failed...%d (%s)\n", __FILE__, __func__, err, strerror(errno));
 		wl_resource_post_error(resource,
@@ -163,23 +164,6 @@ kms_create_buffer(struct wl_client *client, struct wl_resource *resource,
 				       "invalid prime FD");
 		return;
 	}
-#else
-	{
-		struct drm_gem_open op;
-		int ret;
-
-		op.name   = prime_fd;
-		op.handle = 0;
-
-		ret = drmIoctl(kms->fd, DRM_IOCTL_GEM_OPEN, &op);
-		if (ret) {
-			WLKMS_DEBUG("%s: %s: DRM_IOCTL_GEM_OPEN failed...(%s)\n", __FILE__, __func__, strerror(errno));
-			wl_resource_post_error(resource, WL_KMS_ERROR_INVALID_FD, "invalid prime FD");
-			return;
-		}
-		buffer->handle = op.handle;
-	}
-#endif
 
 	// We create a wl_buffer
 	buffer->resource = wl_resource_create(client, &wl_buffer_interface, 1, id);
