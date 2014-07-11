@@ -4,7 +4,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([wayland-kms], [1.1.0],
+AC_INIT([wayland-kms], [1.2.0],
         [http://www.renesas.com/], [wayland-kms])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
