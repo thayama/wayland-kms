@@ -34,6 +34,13 @@
 
 struct wl_kms;
 
+#define MAX_PLANES 3
+
+struct wl_kms_planes {
+	int fd;
+	uint32_t stride;
+};
+
 struct wl_kms_buffer {
 	struct wl_resource *resource;
 	struct wl_kms *kms;
@@ -42,6 +49,10 @@ struct wl_kms_buffer {
 	uint32_t handle;
 	int fd;
 	void *private;
+
+	// for multi-planer formats
+	int num_planes;
+	struct wl_kms_planes planes[MAX_PLANES];
 };
 
 int wayland_kms_fd_get(struct wl_kms *kms);

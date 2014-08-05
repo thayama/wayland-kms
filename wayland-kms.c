@@ -123,18 +123,33 @@ kms_authenticate(struct wl_client *client, struct wl_resource *resource,
 }
 
 static void
-kms_create_buffer(struct wl_client *client, struct wl_resource *resource,
-		  uint32_t id, int32_t prime_fd, int32_t width, int32_t height,
-		  uint32_t stride, uint32_t format, uint32_t handle)
+kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
+		     uint32_t id, int32_t width, int32_t height, uint32_t format,
+		     int32_t fd0, uint32_t stride0, int32_t fd1, uint32_t stride1,
+		     int32_t fd2, uint32_t stride2)
 {
 	struct wl_kms *kms = resource->data;
 	struct wl_kms_buffer *buffer;
-	int err;
+	int err, nplanes;
 
 	switch (format) {
 	case WL_KMS_FORMAT_ARGB8888:
 	case WL_KMS_FORMAT_XRGB8888:
+	case WL_KMS_FORMAT_ABGR8888:
+	case WL_KMS_FORMAT_XBGR8888:
+	case WL_KMS_FORMAT_YUYV:
+	case WL_KMS_FORMAT_RGB565:
+	case WL_KMS_FORMAT_BGR565:
+		nplanes = 1;
 		break;
+
+	case WL_KMS_FORMAT_NV12:
+	case WL_KMS_FORMAT_NV21:
+	case WL_KMS_FORMAT_NV16:
+	case WL_KMS_FORMAT_NV61:
+		nplanes = 2;
+		break;
+
 	default:
 		wl_resource_post_error(resource,
 				       WL_KMS_ERROR_INVALID_FORMAT,
@@ -152,12 +167,14 @@ kms_create_buffer(struct wl_client *client, struct wl_resource *resource,
 	buffer->width = width;
 	buffer->height = height;
 	buffer->format = format;
-	buffer->stride = stride;
-	buffer->fd = prime_fd;
+	buffer->num_planes = nplanes;
+	buffer->stride = buffer->planes[0].stride = stride0;
+	buffer->fd = buffer->planes[0].fd = fd0;
 
-	WLKMS_DEBUG("%s: %s: prime_fd=%d\n", __FILE__, __func__, prime_fd);
+	WLKMS_DEBUG("%s: %s: %d planes (%d, %d, %d)\n", __FILE__, __func__, nplanes, fd0, fd1, fd2);
 
-	if ((err = drmPrimeFDToHandle(kms->fd, prime_fd, &buffer->handle))) {
+	// XXX: Do we need to support multiplaner KMS BO?
+	if ((err = drmPrimeFDToHandle(kms->fd, fd0, &buffer->handle))) {
 		WLKMS_DEBUG("%s: %s: drmPrimeFDToHandle() failed...%d (%s)\n", __FILE__, __func__, err, strerror(errno));
 		wl_resource_post_error(resource,
 				       WL_KMS_ERROR_INVALID_FD,
@@ -178,9 +195,20 @@ kms_create_buffer(struct wl_client *client, struct wl_resource *resource,
 				       buffer, destroy_buffer);
 }
 
+
+static void
+kms_create_buffer(struct wl_client *client, struct wl_resource *resource,
+		  uint32_t id, int32_t prime_fd, int32_t width, int32_t height,
+		  uint32_t stride, uint32_t format, uint32_t handle)
+{
+	kms_create_mp_buffer(client, resource, id, width, height, format, prime_fd, stride,
+			     0, 0, 0, 0);
+}
+
 const static struct wl_kms_interface kms_interface = {
 	.authenticate = kms_authenticate,
 	.create_buffer = kms_create_buffer,
+	.create_mp_buffer = kms_create_mp_buffer,
 };
 
 static void
@@ -232,7 +260,7 @@ struct wl_kms *wayland_kms_init(struct wl_display *display,
 	kms->device_name = strdup(device_name);
 	kms->fd = fd;
 
-	wl_global_create(display, &wl_kms_interface, 1, kms, bind_kms);
+	wl_global_create(display, &wl_kms_interface, 2, kms, bind_kms);
 
 	/*
 	 * we're the server in the middle. we should forward the auth

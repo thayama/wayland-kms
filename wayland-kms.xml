@@ -32,7 +32,7 @@
 
   <!-- KMS BO support. This object is created by the server and published
        using the display's global event. -->
-  <interface name="wl_kms" version="1">
+  <interface name="wl_kms" version="2">
     <enum name="error">
       <entry name="invalid_format" value="0"/>
       <entry name="invalid_fd" value="1"/>
@@ -120,6 +120,21 @@
       <arg name="stride" type="uint"/>
       <arg name="format" type="uint"/>
       <arg name="handle" type="uint"/>	<!-- XXX: Unused -->
+    </request>
+
+    <!-- Create a wayland buffer for the KMS BO buffer. The KMS
+         surface must have a prime FD. This is for a multi-planer. -->
+    <request name="create_mp_buffer" since="2">
+      <arg name="id" type="new_id" interface="wl_buffer"/>
+      <arg name="width" type="int" summary="Width"/>
+      <arg name="height" type="int" summary="Height"/>
+      <arg name="format" type="uint" summary="Pixelformat"/>
+      <arg name="fd0" type="fd" summary="DMABUF/PRIME FD for plane0"/>
+      <arg name="stride0" type="uint" summary="Stride for plane0"/>
+      <arg name="fd1" type="fd" summary="DMABUF/PRIME FD for plane1"/>
+      <arg name="stride1" type="uint" summary="Stride for plane1"/>
+      <arg name="fd2" type="fd" summary="DMABUF/PRIME FD for plane2"/>
+      <arg name="stride2" type="uint" summary="Stride for plane2"/>
     </request>
 
     <!-- Notification of the path of the drm device which is used by
