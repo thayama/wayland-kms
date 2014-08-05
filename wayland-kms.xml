@@ -114,12 +114,12 @@
          surface must have a prime FD. -->
     <request name="create_buffer">
       <arg name="id" type="new_id" interface="wl_buffer"/>
-      <arg name="fd" type="fd"/>	<!-- KMS BO Prime FD -->
+      <arg name="fd" type="fd"/>	<!-- DMABUF/PRIME FD -->
       <arg name="width" type="int"/>
       <arg name="height" type="int"/>
       <arg name="stride" type="uint"/>
       <arg name="format" type="uint"/>
-      <arg name="handle" type="uint"/>	<!-- DevMem Export Handle -->
+      <arg name="handle" type="uint"/>	<!-- XXX: Unused -->
     </request>
 
     <!-- Notification of the path of the drm device which is used by
