@@ -137,7 +137,10 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 	case WL_KMS_FORMAT_XRGB8888:
 	case WL_KMS_FORMAT_ABGR8888:
 	case WL_KMS_FORMAT_XBGR8888:
+	case WL_KMS_FORMAT_RGB888:
+	case WL_KMS_FORMAT_BGR888:
 	case WL_KMS_FORMAT_YUYV:
+	case WL_KMS_FORMAT_UYVY:
 	case WL_KMS_FORMAT_RGB565:
 	case WL_KMS_FORMAT_BGR565:
 		nplanes = 1;
