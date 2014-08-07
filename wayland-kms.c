@@ -174,6 +174,16 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 	buffer->stride = buffer->planes[0].stride = stride0;
 	buffer->fd = buffer->planes[0].fd = fd0;
 
+	if (nplanes > 1) {
+		buffer->planes[1].stride = stride1;
+		buffer->planes[1].fd = fd1;
+	}
+
+	if (nplanes > 2) {
+		buffer->planes[2].stride = stride2;
+		buffer->planes[2].fd = fd2;
+	}
+
 	WLKMS_DEBUG("%s: %s: %d planes (%d, %d, %d)\n", __FILE__, __func__, nplanes, fd0, fd1, fd2);
 
 	// XXX: Do we need to support multiplaner KMS BO?
