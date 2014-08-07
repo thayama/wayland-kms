@@ -242,6 +242,18 @@ bind_kms(struct wl_client *client, void *data, uint32_t version, uint32_t id)
 	wl_resource_post_event(resource, WL_KMS_DEVICE, kms->device_name);
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_ARGB8888);
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_XRGB8888);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_ABGR8888);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_XBGR8888);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_RGB888);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_BGR888);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_YUYV);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_UYVY);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_RGB565);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_BGR565);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_NV12);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_NV21);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_NV16);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_NV61);
 }
 
 int wayland_kms_fd_get(struct wl_kms* kms)
