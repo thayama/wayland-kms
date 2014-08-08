@@ -187,7 +187,7 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 	WLKMS_DEBUG("%s: %s: %d planes (%d, %d, %d)\n", __FILE__, __func__, nplanes, fd0, fd1, fd2);
 
 	// XXX: Do we need to support multiplaner KMS BO?
-	if ((err = drmPrimeFDToHandle(kms->fd, fd0, &buffer->handle))) {
+	if ((nplanes == 1) && (err = drmPrimeFDToHandle(kms->fd, fd0, &buffer->handle))) {
 		WLKMS_DEBUG("%s: %s: drmPrimeFDToHandle() failed...%d (%s)\n", __FILE__, __func__, err, strerror(errno));
 		wl_resource_post_error(resource,
 				       WL_KMS_ERROR_INVALID_FD,
