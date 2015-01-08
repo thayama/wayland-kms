@@ -264,9 +264,11 @@ int wayland_kms_fd_get(struct wl_kms* kms)
 	return kms->fd;
 }
 
+static int __wayland_kms_initialized = 0;
+
 struct wl_kms_buffer *wayland_kms_buffer_get(struct wl_resource *resource)
 {
-	if (resource == NULL)
+	if (!__wayland_kms_initialized || resource == NULL)
 		return NULL;
 
 	if (wl_resource_instance_of(resource, &wl_buffer_interface,
@@ -309,6 +311,8 @@ struct wl_kms *wayland_kms_init(struct wl_display *display,
 			goto error;
 	}
 
+	__wayland_kms_initialized = 1;
+
 	return kms;
 
 error:
@@ -321,6 +325,7 @@ void wayland_kms_uninit(struct wl_kms *kms)
 	free(kms->device_name);
 
 	/* FIXME: need wl_display_del_{object,global} */
+	__wayland_kms_initialized = 0;
 
 	free(kms);
 }
