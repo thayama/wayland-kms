@@ -377,7 +377,7 @@ int wayland_kms_query_buffer(struct wl_kms *kms, struct wl_resource *resource,
 	if (!buffer)
 		return -1;
 
-	switch(attr) {
+	switch (attr) {
 	case WL_KMS_WIDTH:
 		*value = buffer->width;
 		return 0;
