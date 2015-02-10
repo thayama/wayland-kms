@@ -45,6 +45,7 @@
 #include "wayland-kms-server-protocol.h"
 
 #include <EGL/egl.h>
+#include "weston-egl-ext.h"
 
 #if defined(DEBUG)
 #	define WLKMS_DEBUG(s, x...) { printf(s, ##x); }
