@@ -143,9 +143,11 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 	case WL_KMS_FORMAT_RGB888:
 	case WL_KMS_FORMAT_BGR888:
 	case WL_KMS_FORMAT_YUYV:
+	case WL_KMS_FORMAT_YVYU:
 	case WL_KMS_FORMAT_UYVY:
 	case WL_KMS_FORMAT_RGB565:
 	case WL_KMS_FORMAT_BGR565:
+	case WL_KMS_FORMAT_RGB332:
 		nplanes = 1;
 		break;
 
@@ -154,6 +156,10 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 	case WL_KMS_FORMAT_NV16:
 	case WL_KMS_FORMAT_NV61:
 		nplanes = 2;
+		break;
+
+	case WL_KMS_FORMAT_YUV420:
+		nplanes = 3;
 		break;
 
 	default:
@@ -250,13 +256,16 @@ bind_kms(struct wl_client *client, void *data, uint32_t version, uint32_t id)
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_RGB888);
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_BGR888);
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_YUYV);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_YVYU);
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_UYVY);
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_RGB565);
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_BGR565);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_RGB332);
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_NV12);
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_NV21);
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_NV16);
 	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_NV61);
+	wl_resource_post_event(resource, WL_KMS_FORMAT, WL_KMS_FORMAT_YUV420);
 }
 
 int wayland_kms_fd_get(struct wl_kms* kms)
