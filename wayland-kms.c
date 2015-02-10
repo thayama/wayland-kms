@@ -339,6 +339,37 @@ uint32_t wayland_kms_buffer_get_format(struct wl_kms_buffer *buffer)
 	return buffer->format;
 }
 
+static
+int wayland_kms_get_texture_format(struct wl_kms_buffer *buffer)
+{
+	int format = 0;
+
+	switch (buffer->format) {
+	case WL_KMS_FORMAT_ARGB8888:
+	case WL_KMS_FORMAT_ABGR8888:
+		format = EGL_TEXTURE_RGBA;
+		break;
+
+	case WL_KMS_FORMAT_XRGB8888:
+	case WL_KMS_FORMAT_XBGR8888:
+	case WL_KMS_FORMAT_RGB888:
+	case WL_KMS_FORMAT_BGR888:
+	case WL_KMS_FORMAT_RGB565:
+	case WL_KMS_FORMAT_BGR565:
+	case WL_KMS_FORMAT_RGB332:
+		format = EGL_TEXTURE_RGB;
+		break;
+
+	case WL_KMS_FORMAT_NV12:
+	case WL_KMS_FORMAT_NV21:
+	case WL_KMS_FORMAT_NV16:
+	case WL_KMS_FORMAT_NV61:
+		format = EGL_TEXTURE_EXTERNAL_WL;
+	}
+
+	return format;
+}
+
 int wayland_kms_query_buffer(struct wl_kms *kms, struct wl_resource *resource,
 				enum wl_kms_attribute attr, int *value)
 {
@@ -356,7 +387,7 @@ int wayland_kms_query_buffer(struct wl_kms *kms, struct wl_resource *resource,
 		return 0;
 	
 	case WL_KMS_TEXTURE_FORMAT:
-		*value = EGL_TEXTURE_RGBA;
+		*value = wayland_kms_get_texture_format(buffer);
 		return 0;
 	}
 
