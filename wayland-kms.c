@@ -44,18 +44,12 @@
 #include "wayland-kms-auth.h"
 #include "wayland-kms-server-protocol.h"
 
+#include <EGL/egl.h>
+
 #if defined(DEBUG)
 #	define WLKMS_DEBUG(s, x...) { printf(s, ##x); }
 #else
 #	define WLKMS_DEBUG(s, x...) { }
-#endif
-
-/*
- * Taken from EGL/egl.h. Better to refer the egl.h
- * in the future.
- */
-#ifndef EGL_TEXTURE_RGBA
-#	define EGL_TEXTURE_RGBA		0x305E
 #endif
 
 struct wl_kms {
