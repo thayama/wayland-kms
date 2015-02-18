@@ -196,6 +196,7 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 		wl_resource_post_error(resource,
 				       WL_KMS_ERROR_INVALID_FD,
 				       "invalid prime FD");
+		free(buffer);
 		return;
 	}
 
