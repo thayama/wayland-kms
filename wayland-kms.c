@@ -65,21 +65,26 @@ struct wl_kms {
  * wl_kms server
  */
 
+static void close_drm_handle(int fd, uint32_t handle)
+{
+	struct drm_gem_close gem_close = { .handle = handle };
+	int ret;
+
+	ret = drmIoctl(fd, DRM_IOCTL_GEM_CLOSE, &gem_close);
+	if (ret)
+		WLKMS_DEBUG("%s: %s: DRM_IOCTL_GEM_CLOSE failed.(%s)\n",
+			 __FILE__, __func__, strerror(errno));
+
+}
+
 static void destroy_buffer(struct wl_resource *resource)
 {
 	struct wl_kms_buffer *buffer = resource->data;
-	struct drm_gem_close gem_close;
-	int i, ret;
+	int i;
 
-	for (i = 0; i < buffer->num_planes; i++)
+	for (i = 0; i < buffer->num_planes; i++) {
 		close(buffer->planes[i].fd);
-
-	if (buffer->handle) {
-		gem_close.handle = buffer->handle;
-		ret = drmIoctl(buffer->kms->fd, DRM_IOCTL_GEM_CLOSE, &gem_close);
-		if (ret)
-			WLKMS_DEBUG("%s: %s: DRM_IOCTL_GEM_CLOSE failed.(%s)\n",
-				 __FILE__, __func__, strerror(errno));
+		close_drm_handle(buffer->kms->fd, buffer->planes[i].handle);
 	}
 
 	free(buffer);
@@ -178,27 +183,32 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 	buffer->stride = buffer->planes[0].stride = stride0;
 	buffer->fd = buffer->planes[0].fd = fd0;
 
+	if (err = drmPrimeFDToHandle(kms->fd, fd0, &buffer->planes[0].handle))
+		goto invalid_fd_error;
+	buffer->handle = buffer->planes[0].handle;
+
 	if (nplanes > 1) {
 		buffer->planes[1].stride = stride1;
 		buffer->planes[1].fd = fd1;
+		if (err = drmPrimeFDToHandle(kms->fd, fd1, &buffer->planes[1].handle)) {
+			close_drm_handle(kms->fd, buffer->planes[0].handle);
+			goto invalid_fd_error;
+		}
 	}
 
 	if (nplanes > 2) {
 		buffer->planes[2].stride = stride2;
 		buffer->planes[2].fd = fd2;
+		if (err = drmPrimeFDToHandle(kms->fd, fd2, &buffer->planes[2].handle)) {
+			close_drm_handle(kms->fd, buffer->planes[0].handle);
+			close_drm_handle(kms->fd, buffer->planes[1].handle);
+			goto invalid_fd_error;
+		}
 	}
 
 	WLKMS_DEBUG("%s: %s: %d planes (%d, %d, %d)\n", __FILE__, __func__, nplanes, fd0, fd1, fd2);
 
 	// XXX: Do we need to support multiplaner KMS BO?
-	if ((nplanes == 1) && (err = drmPrimeFDToHandle(kms->fd, fd0, &buffer->handle))) {
-		WLKMS_DEBUG("%s: %s: drmPrimeFDToHandle() failed...%d (%s)\n", __FILE__, __func__, err, strerror(errno));
-		wl_resource_post_error(resource,
-				       WL_KMS_ERROR_INVALID_FD,
-				       "invalid prime FD");
-		free(buffer);
-		return;
-	}
 
 	// We create a wl_buffer
 	buffer->resource = wl_resource_create(client, &wl_buffer_interface, 1, id);
@@ -211,6 +221,12 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 	wl_resource_set_implementation(buffer->resource,
 				       (void (**)(void))&kms_buffer_interface,
 				       buffer, destroy_buffer);
+	return;
+
+invalid_fd_error:
+	WLKMS_DEBUG("%s: %s: drmPrimeFDToHandle() failed...%d (%s)\n", __FILE__, __func__, err, strerror(errno));
+	wl_resource_post_error(resource, WL_KMS_ERROR_INVALID_FD, "invalid prime FD");
+	free(buffer);
 }
 
 

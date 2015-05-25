@@ -39,6 +39,7 @@ struct wl_kms;
 struct wl_kms_planes {
 	int fd;
 	uint32_t stride;
+	uint32_t handle;
 };
 
 struct wl_kms_buffer {
