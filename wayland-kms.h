@@ -79,4 +79,6 @@ enum wl_kms_attribute {
 int wayland_kms_query_buffer(struct wl_kms *kms, struct wl_resource *resource,
 				enum wl_kms_attribute attr, int *value);
 
+#define WL_KMS_INVALID_FD -1
+
 #endif

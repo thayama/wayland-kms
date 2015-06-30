@@ -239,7 +239,7 @@ kms_create_buffer(struct wl_client *client, struct wl_resource *resource,
 		  uint32_t stride, uint32_t format, uint32_t handle)
 {
 	kms_create_mp_buffer(client, resource, id, width, height, format, prime_fd, stride,
-			     0, 0, 0, 0);
+			     WL_KMS_INVALID_FD, 0, WL_KMS_INVALID_FD, 0);
 }
 
 const static struct wl_kms_interface kms_interface = {
