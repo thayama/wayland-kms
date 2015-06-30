@@ -128,6 +128,7 @@ kms_authenticate(struct wl_client *client, struct wl_resource *resource,
 	}
 }
 
+/* Note: This API closes unused fds passed through its call. */
 static void
 kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 		     uint32_t id, int32_t width, int32_t height, uint32_t format,
@@ -171,6 +172,14 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 				       "invalid format");
 		return;
 	}
+
+	/* Wayland passes dup'd fds that must be closed when
+	   no longer needed. Close the unused ones
+	   immediately to avoid leaking them. */
+	if (fd1 != WL_KMS_INVALID_FD && nplanes < 2)
+		close(fd1);
+	if (fd2 != WL_KMS_INVALID_FD && nplanes < 3)
+		close(fd2);
 
 	buffer = calloc(1, sizeof *buffer);
 	if (buffer == NULL) {
