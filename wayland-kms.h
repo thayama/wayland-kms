@@ -50,7 +50,6 @@ struct wl_kms_buffer {
 	uint32_t handle;
 	int fd;
 	void *private;
-	void (*destroy_callback)(void *);
 
 	// for multi-planer formats
 	int num_planes;

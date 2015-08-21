@@ -82,9 +82,6 @@ static void destroy_buffer(struct wl_resource *resource)
 	struct wl_kms_buffer *buffer = resource->data;
 	int i;
 
-	if (buffer->destroy_callback)
-		buffer->destroy_callback(buffer->private);
-
 	for (i = 0; i < buffer->num_planes; i++) {
 		close(buffer->planes[i].fd);
 		close_drm_handle(buffer->kms->fd, buffer->planes[i].handle);
