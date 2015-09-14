@@ -352,6 +352,7 @@ error:
 
 void wayland_kms_uninit(struct wl_kms *kms)
 {
+	free(kms->auth);
 	free(kms->device_name);
 
 	/* FIXME: need wl_display_del_{object,global} */
