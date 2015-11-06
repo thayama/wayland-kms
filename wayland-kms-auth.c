@@ -77,7 +77,7 @@ static const struct wl_callback_listener wayland_sync_listener = {
 /*
  * sync with the server
  */
-int wayland_sync(struct kms_auth *auth)
+static int wayland_sync(struct kms_auth *auth)
 {
 	struct wl_callback *callback;
 	int ret = 0, done = 0;
