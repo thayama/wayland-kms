@@ -30,7 +30,7 @@
 #ifndef WAYLAND_KMS_H
 #define WAYLAND_KMS_H
 
-#include <wayland-server.h>
+#include <wayland-server-core.h>
 
 struct wl_kms;
 
