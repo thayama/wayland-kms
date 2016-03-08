@@ -36,6 +36,7 @@
 
 #if VERSION_INFO(WAYLAND_VERSION_MAJOR, WAYLAND_VERSION_MINOR, WAYLAND_VERSION_MICRO) >= VERSION_INFO(1, 8, 0)
 #include <wayland-server-core.h>
+#include <wayland-server-protocol.h>
 #else
 #include <wayland-server.h>
 #endif
