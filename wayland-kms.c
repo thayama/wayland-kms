@@ -294,11 +294,11 @@ int wayland_kms_fd_get(struct wl_kms* kms)
 	return kms->fd;
 }
 
-static int __wayland_kms_initialized = 0;
+static struct wl_kms *__wl_kms = NULL;
 
 struct wl_kms_buffer *wayland_kms_buffer_get(struct wl_resource *resource)
 {
-	if (!__wayland_kms_initialized || resource == NULL)
+	if (!__wl_kms || resource == NULL)
 		return NULL;
 
 	if (wl_resource_instance_of(resource, &wl_buffer_interface,
@@ -311,16 +311,17 @@ struct wl_kms_buffer *wayland_kms_buffer_get(struct wl_resource *resource)
 struct wl_kms *wayland_kms_init(struct wl_display *display,
 				struct wl_display *server, char *device_name, int fd)
 {
-	struct wl_kms *kms;
+	if (__wl_kms)
+		return __wl_kms;
 
-	if (!(kms = calloc(1, sizeof(struct wl_kms))))
+	if (!(__wl_kms = calloc(1, sizeof(struct wl_kms))))
 		return NULL;
 
-	kms->display = display;
-	kms->device_name = strdup(device_name);
-	kms->fd = fd;
+	__wl_kms->display = display;
+	__wl_kms->device_name = strdup(device_name);
+	__wl_kms->fd = fd;
 
-	wl_global_create(display, &wl_kms_interface, 2, kms, bind_kms);
+	wl_global_create(display, &wl_kms_interface, 2, __wl_kms, bind_kms);
 
 	/*
 	 * we're the server in the middle. we should forward the auth
@@ -329,7 +330,7 @@ struct wl_kms *wayland_kms_init(struct wl_display *display,
 	if (server) {
 		drm_magic_t magic;
 
-		if (!(kms->auth = kms_auth_init(server)))
+		if (!(__wl_kms->auth = kms_auth_init(server)))
 			goto error;
 
 		/* get a magic */
@@ -337,28 +338,29 @@ struct wl_kms *wayland_kms_init(struct wl_display *display,
 			goto error;
 
 		/* authenticate myself */
-		if (kms_auth_request(kms->auth, magic) < 0)
+		if (kms_auth_request(__wl_kms->auth, magic) < 0)
 			goto error;
 	}
 
-	__wayland_kms_initialized = 1;
-
-	return kms;
+	return __wl_kms;
 
 error:
-	free(kms);
+	free(__wl_kms);
+	__wl_kms = NULL;
 	return NULL;
 }
 
 void wayland_kms_uninit(struct wl_kms *kms)
 {
+	if (kms != __wl_kms)
+		return;
+
 	free(kms->auth);
 	free(kms->device_name);
+	free(kms);
 
 	/* FIXME: need wl_display_del_{object,global} */
-	__wayland_kms_initialized = 0;
-
-	free(kms);
+	__wl_kms = NULL;
 }
 
 uint32_t wayland_kms_buffer_get_format(struct wl_kms_buffer *buffer)
