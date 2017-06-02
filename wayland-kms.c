@@ -192,14 +192,16 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 	buffer->stride = buffer->planes[0].stride = stride0;
 	buffer->fd = buffer->planes[0].fd = fd0;
 
-	if (err = drmPrimeFDToHandle(kms->fd, fd0, &buffer->planes[0].handle))
+	err = drmPrimeFDToHandle(kms->fd, fd0, &buffer->planes[0].handle);
+	if (err)
 		goto invalid_fd_error;
 	buffer->handle = buffer->planes[0].handle;
 
 	if (nplanes > 1) {
 		buffer->planes[1].stride = stride1;
 		buffer->planes[1].fd = fd1;
-		if (err = drmPrimeFDToHandle(kms->fd, fd1, &buffer->planes[1].handle)) {
+		err = drmPrimeFDToHandle(kms->fd, fd1, &buffer->planes[1].handle);
+		if (err) {
 			close_drm_handle(kms->fd, buffer->planes[0].handle);
 			goto invalid_fd_error;
 		}
@@ -208,7 +210,8 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 	if (nplanes > 2) {
 		buffer->planes[2].stride = stride2;
 		buffer->planes[2].fd = fd2;
-		if (err = drmPrimeFDToHandle(kms->fd, fd2, &buffer->planes[2].handle)) {
+		err = drmPrimeFDToHandle(kms->fd, fd2, &buffer->planes[2].handle);
+		if (err) {
 			close_drm_handle(kms->fd, buffer->planes[0].handle);
 			close_drm_handle(kms->fd, buffer->planes[1].handle);
 			goto invalid_fd_error;
@@ -259,7 +262,6 @@ bind_kms(struct wl_client *client, void *data, uint32_t version, uint32_t id)
 {
 	struct wl_kms *kms = data;
 	struct wl_resource *resource;
-	uint32_t capabilities;
 
 	resource = wl_resource_create(client, &wl_kms_interface, version, id);
 	if (!resource) {
