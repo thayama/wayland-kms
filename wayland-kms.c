@@ -347,6 +347,8 @@ struct wl_kms *wayland_kms_init(struct wl_display *display,
 	return __wl_kms;
 
 error:
+	kms_auth_uninit(__wl_kms->auth);
+	free(__wl_kms->device_name);
 	free(__wl_kms);
 	__wl_kms = NULL;
 	return NULL;
@@ -357,7 +359,7 @@ void wayland_kms_uninit(struct wl_kms *kms)
 	if (kms != __wl_kms)
 		return;
 
-	free(kms->auth);
+	kms_auth_uninit(kms->auth);
 	free(kms->device_name);
 	free(kms);
 

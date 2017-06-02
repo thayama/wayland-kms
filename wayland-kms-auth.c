@@ -179,9 +179,24 @@ kms_auth_init(struct wl_display *display)
 	wl_registry_add_listener(auth->wl_registry, &wayland_registry_listener, auth);
 
 	if (wayland_sync(auth) < 0) {
-		free(auth);
+		kms_auth_uninit(auth);
 		return NULL;
 	}
 
 	return auth;
+}
+
+void
+kms_auth_uninit(struct kms_auth *auth)
+{
+	if (!auth)
+		return;
+
+	if (auth->wl_kms)
+		wl_kms_destroy(auth->wl_kms);
+
+	if (auth->wl_registry)
+		wl_registry_destroy(auth->wl_registry);
+
+	free(auth);
 }
