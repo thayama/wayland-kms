@@ -296,11 +296,11 @@ int wayland_kms_fd_get(struct wl_kms* kms)
 	return kms->fd;
 }
 
-static struct wl_kms *__wl_kms = NULL;
+static struct wl_kms *wl_kms_entity = NULL;
 
 struct wl_kms_buffer *wayland_kms_buffer_get(struct wl_resource *resource)
 {
-	if (!__wl_kms || resource == NULL)
+	if (!wl_kms_entity || resource == NULL)
 		return NULL;
 
 	if (wl_resource_instance_of(resource, &wl_buffer_interface,
@@ -313,17 +313,17 @@ struct wl_kms_buffer *wayland_kms_buffer_get(struct wl_resource *resource)
 struct wl_kms *wayland_kms_init(struct wl_display *display,
 				struct wl_display *server, char *device_name, int fd)
 {
-	if (__wl_kms)
-		return __wl_kms;
+	if (wl_kms_entity)
+		return wl_kms_entity;
 
-	if (!(__wl_kms = calloc(1, sizeof(struct wl_kms))))
+	if (!(wl_kms_entity = calloc(1, sizeof(struct wl_kms))))
 		return NULL;
 
-	__wl_kms->display = display;
-	__wl_kms->device_name = strdup(device_name);
-	__wl_kms->fd = fd;
+	wl_kms_entity->display = display;
+	wl_kms_entity->device_name = strdup(device_name);
+	wl_kms_entity->fd = fd;
 
-	wl_global_create(display, &wl_kms_interface, 2, __wl_kms, bind_kms);
+	wl_global_create(display, &wl_kms_interface, 2, wl_kms_entity, bind_kms);
 
 	/*
 	 * we're the server in the middle. we should forward the auth
@@ -332,7 +332,7 @@ struct wl_kms *wayland_kms_init(struct wl_display *display,
 	if (server) {
 		drm_magic_t magic;
 
-		if (!(__wl_kms->auth = kms_auth_init(server)))
+		if (!(wl_kms_entity->auth = kms_auth_init(server)))
 			goto error;
 
 		/* get a magic */
@@ -340,23 +340,24 @@ struct wl_kms *wayland_kms_init(struct wl_display *display,
 			goto error;
 
 		/* authenticate myself */
-		if (kms_auth_request(__wl_kms->auth, magic) < 0)
+		if (kms_auth_request(wl_kms_entity->auth, magic) < 0)
 			goto error;
 	}
 
-	return __wl_kms;
+	return wl_kms_entity;
 
 error:
-	kms_auth_uninit(__wl_kms->auth);
-	free(__wl_kms->device_name);
-	free(__wl_kms);
-	__wl_kms = NULL;
+	kms_auth_uninit(wl_kms_entity->auth);
+	free(wl_kms_entity->device_name);
+	free(wl_kms_entity);
+	wl_kms_entity = NULL;
+
 	return NULL;
 }
 
 void wayland_kms_uninit(struct wl_kms *kms)
 {
-	if (kms != __wl_kms)
+	if (kms != wl_kms_entity)
 		return;
 
 	kms_auth_uninit(kms->auth);
@@ -364,7 +365,7 @@ void wayland_kms_uninit(struct wl_kms *kms)
 	free(kms);
 
 	/* FIXME: need wl_display_del_{object,global} */
-	__wl_kms = NULL;
+	wl_kms_entity = NULL;
 }
 
 uint32_t wayland_kms_buffer_get_format(struct wl_kms_buffer *buffer)
