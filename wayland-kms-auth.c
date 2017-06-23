@@ -84,7 +84,10 @@ static int wayland_sync(struct kms_auth *auth)
 
 	WLKMS_DEBUG("%s: %s: %d\n", __FILE__, __func__, __LINE__);
 	callback = wl_display_sync(auth->wl_display);
-	wl_callback_add_listener(callback, &wayland_sync_listener, &done);
+	if (wl_callback_add_listener(callback, &wayland_sync_listener, &done) < 0) {
+		wl_callback_destroy(callback);
+		return -1;
+	}
 	wl_proxy_set_queue((struct wl_proxy*)callback, auth->wl_queue);
 	while (ret >= 0 && !done) {
 		ret = wl_display_dispatch_queue(auth->wl_display, auth->wl_queue);
@@ -138,7 +141,8 @@ static void wayland_registry_handle_global(void *data, struct wl_registry *regis
 	 */
 	if (!strcmp(interface, "wl_kms")) {
 		auth->wl_kms = wl_registry_bind(registry, name, &wl_kms_interface, version);
-		wl_kms_add_listener(auth->wl_kms, &wayland_kms_listener, auth);
+		if (wl_kms_add_listener(auth->wl_kms, &wayland_kms_listener, auth) < 0)
+			WLKMS_DEBUG("%s: %s: %d: already added listener\n", __FILE__, __func__, __LINE__);
 	}
 }
 
@@ -154,6 +158,9 @@ static const struct wl_registry_listener wayland_registry_listener = {
 int
 kms_auth_request(struct kms_auth *auth, uint32_t magic)
 {
+	if (!auth->wl_kms)
+		return -1;
+
 	auth->authenticated = 0;
 	wl_kms_authenticate(auth->wl_kms, magic);
 
@@ -176,14 +183,17 @@ kms_auth_init(struct wl_display *display)
 	auth->wl_queue = wl_display_create_queue(auth->wl_display);
 	auth->wl_registry = wl_display_get_registry(auth->wl_display);
 	wl_proxy_set_queue((struct wl_proxy*)auth->wl_registry, auth->wl_queue);
-	wl_registry_add_listener(auth->wl_registry, &wayland_registry_listener, auth);
+	if (!wl_registry_add_listener(auth->wl_registry, &wayland_registry_listener, auth))
+		goto error;
 
-	if (wayland_sync(auth) < 0) {
-		kms_auth_uninit(auth);
-		return NULL;
-	}
+	if (wayland_sync(auth) < 0)
+		goto error;
 
 	return auth;
+
+error:
+	kms_auth_uninit(auth);
+	return NULL;
 }
 
 void

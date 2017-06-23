@@ -3,8 +3,8 @@
 
 struct kms_auth;
 
-struct kms_auth *kms_auth_init(struct wl_display *server);
-void kms_auth_uninit(struct kms_auth *auth);
-int kms_auth_request(struct kms_auth *auth, uint32_t magic);
+extern struct kms_auth *kms_auth_init(struct wl_display *display);
+extern void kms_auth_uninit(struct kms_auth *auth);
+extern int kms_auth_request(struct kms_auth *auth, uint32_t magic);
 
 #endif

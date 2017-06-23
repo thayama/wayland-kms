@@ -230,8 +230,7 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 		return;
 	}
 
-	wl_resource_set_implementation(buffer->resource,
-				       (void (**)(void))&kms_buffer_interface,
+	wl_resource_set_implementation(buffer->resource, &kms_buffer_interface,
 				       buffer, destroy_buffer);
 	return;
 
@@ -323,7 +322,8 @@ struct wl_kms *wayland_kms_init(struct wl_display *display,
 	wl_kms_entity->device_name = strdup(device_name);
 	wl_kms_entity->fd = fd;
 
-	wl_global_create(display, &wl_kms_interface, 2, wl_kms_entity, bind_kms);
+	if (!wl_global_create(display, &wl_kms_interface, 2, wl_kms_entity, bind_kms))
+		goto error;
 
 	/*
 	 * we're the server in the middle. we should forward the auth
@@ -376,13 +376,10 @@ uint32_t wayland_kms_buffer_get_format(struct wl_kms_buffer *buffer)
 static
 int wayland_kms_get_texture_format(struct wl_kms_buffer *buffer)
 {
-	int format = 0;
-
 	switch (buffer->format) {
 	case WL_KMS_FORMAT_ARGB8888:
 	case WL_KMS_FORMAT_ABGR8888:
-		format = EGL_TEXTURE_RGBA;
-		break;
+		return EGL_TEXTURE_RGBA;
 
 	case WL_KMS_FORMAT_XRGB8888:
 	case WL_KMS_FORMAT_XBGR8888:
@@ -391,17 +388,17 @@ int wayland_kms_get_texture_format(struct wl_kms_buffer *buffer)
 	case WL_KMS_FORMAT_RGB565:
 	case WL_KMS_FORMAT_BGR565:
 	case WL_KMS_FORMAT_RGB332:
-		format = EGL_TEXTURE_RGB;
-		break;
+		return EGL_TEXTURE_RGB;
 
 	case WL_KMS_FORMAT_NV12:
 	case WL_KMS_FORMAT_NV21:
 	case WL_KMS_FORMAT_NV16:
 	case WL_KMS_FORMAT_NV61:
-		format = EGL_TEXTURE_EXTERNAL_WL;
-	}
+		return EGL_TEXTURE_EXTERNAL_WL;
 
-	return format;
+	default:
+		return 0;
+	}
 }
 
 int wayland_kms_query_buffer(struct wl_kms *kms, struct wl_resource *resource,
@@ -423,7 +420,8 @@ int wayland_kms_query_buffer(struct wl_kms *kms, struct wl_resource *resource,
 	case WL_KMS_TEXTURE_FORMAT:
 		*value = wayland_kms_get_texture_format(buffer);
 		return 0;
-	}
 
-	return -1;
+	default:
+		return -1;
+	}
 }

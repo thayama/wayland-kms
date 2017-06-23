@@ -1,5 +1,5 @@
 /*
- * Copyright 息 2013 Renesas Solutions Corp.
+ * Copyright (C) 2013 Renesas Solutions Corp.
  *
  * Based on src/egl/wayland/wayland-drm/wayland-drm.h in Mesa.
  *
@@ -65,18 +65,17 @@ struct wl_kms_buffer {
 	struct wl_kms_planes planes[MAX_PLANES];
 };
 
-int wayland_kms_fd_get(struct wl_kms *kms);
+extern int wayland_kms_fd_get(struct wl_kms *kms);
 
-struct wl_kms_buffer *wayland_kms_buffer_get(struct wl_resource *resource);
+extern struct wl_kms_buffer *wayland_kms_buffer_get(struct wl_resource *resource);
 
-struct wl_kms *wayland_kms_init(struct wl_display *display,
-			        struct wl_display *server, char *device_name, int fd);
+extern struct wl_kms *wayland_kms_init(struct wl_display *display,
+				       struct wl_display *server,
+				       char *device_name, int fd);
 
-void wayland_kms_uninit(struct wl_kms *kms);
+extern void wayland_kms_uninit(struct wl_kms *kms);
 
-uint32_t wayland_kms_buffer_get_format(struct wl_kms_buffer *buffer);
-
-void *wayland_kms_buffer_get_buffer(struct wl_kms_buffer *buffer);
+extern uint32_t wayland_kms_buffer_get_format(struct wl_kms_buffer *buffer);
 
 enum wl_kms_attribute {
 	WL_KMS_WIDTH,
@@ -84,8 +83,9 @@ enum wl_kms_attribute {
 	WL_KMS_TEXTURE_FORMAT
 };
 
-int wayland_kms_query_buffer(struct wl_kms *kms, struct wl_resource *resource,
-				enum wl_kms_attribute attr, int *value);
+extern int wayland_kms_query_buffer(struct wl_kms *kms,
+				    struct wl_resource *resource,
+				    enum wl_kms_attribute attr, int *value);
 
 #define WL_KMS_INVALID_FD -1
 
