@@ -183,7 +183,7 @@ kms_auth_init(struct wl_display *display)
 	auth->wl_queue = wl_display_create_queue(auth->wl_display);
 	auth->wl_registry = wl_display_get_registry(auth->wl_display);
 	wl_proxy_set_queue((struct wl_proxy*)auth->wl_registry, auth->wl_queue);
-	if (!wl_registry_add_listener(auth->wl_registry, &wayland_registry_listener, auth))
+	if (wl_registry_add_listener(auth->wl_registry, &wayland_registry_listener, auth) < 0)
 		goto error;
 
 	if (wayland_sync(auth) < 0)
