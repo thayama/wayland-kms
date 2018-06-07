@@ -59,48 +59,6 @@ struct kms_auth {
 
 
 /*
- * Sync with the server
- */
-
-static void wayland_sync_callback(void *data, struct wl_callback *callback, uint32_t serial)
-{
-	int *done = data;
-	*done = 1;
-	WLKMS_DEBUG("%s: %s: %d\n", __FILE__, __func__, __LINE__);
-	wl_callback_destroy(callback);
-}
-
-static const struct wl_callback_listener wayland_sync_listener = {
-	.done = wayland_sync_callback
-};
-
-/*
- * sync with the server
- */
-static int wayland_sync(struct kms_auth *auth)
-{
-	struct wl_callback *callback;
-	int ret = 0, done = 0;
-
-	WLKMS_DEBUG("%s: %s: %d\n", __FILE__, __func__, __LINE__);
-	callback = wl_display_sync(auth->wl_display);
-	if (wl_callback_add_listener(callback, &wayland_sync_listener, &done) < 0) {
-		wl_callback_destroy(callback);
-		return -1;
-	}
-	wl_proxy_set_queue((struct wl_proxy*)callback, auth->wl_queue);
-	while (ret >= 0 && !done) {
-		ret = wl_display_dispatch_queue(auth->wl_display, auth->wl_queue);
-	}
-
-	if (!done) {
-		wl_callback_destroy(callback);
-	}
-
-	return ret;
-}
-
-/*
  * For the nested authentication
  */
 
@@ -164,7 +122,7 @@ kms_auth_request(struct kms_auth *auth, uint32_t magic)
 	auth->authenticated = 0;
 	wl_kms_authenticate(auth->wl_kms, magic);
 
-	if (wayland_sync(auth) < 0 || !auth->authenticated)
+	if (wl_display_roundtrip_queue(auth->wl_display, auth->wl_queue) < 0 || !auth->authenticated)
 		return -1;
 
 	return 0;
@@ -186,7 +144,7 @@ kms_auth_init(struct wl_display *display)
 	if (wl_registry_add_listener(auth->wl_registry, &wayland_registry_listener, auth) < 0)
 		goto error;
 
-	if (wayland_sync(auth) < 0)
+	if (wl_display_roundtrip_queue(auth->wl_display, auth->wl_queue) < 0)
 		goto error;
 
 	return auth;
