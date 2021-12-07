@@ -59,6 +59,7 @@ struct wl_kms {
 	char *device_name;
 
 	struct kms_auth *auth;		/* for nested authentication */
+	int authenticated;
 };
 
 /*
@@ -177,6 +178,21 @@ kms_create_mp_buffer(struct wl_client *client, struct wl_resource *resource,
 		close(fd1);
 	if (fd2 != WL_KMS_INVALID_FD && nplanes < 3)
 		close(fd2);
+
+	if (!kms->authenticated) {
+		drm_magic_t magic;
+
+		/* authenticate myself */
+		if (drmGetMagic(kms->fd, &magic) ||
+		    kms_auth_request(kms->auth, magic)) {
+			wl_resource_post_error(resource,
+				    WL_KMS_ERROR_AUTHENTICATION_FAILED, "authentication failed");
+			WLKMS_DEBUG("%s: %s: authentication failed.\n", __FILE__, __func__);
+			return;
+		}
+
+		kms->authenticated = 1;
+	}
 
 	buffer = calloc(1, sizeof *buffer);
 	if (buffer == NULL) {
@@ -326,22 +342,16 @@ struct wl_kms *wayland_kms_init(struct wl_display *display,
 		goto error;
 
 	/*
-	 * we're the server in the middle. we should forward the auth
-	 * request to our server.
+	 * we're the server in the middle. we should forward the all
+	 * client authentication requests to our server.  We may
+	 * also need to authenticate ourselves later if we provide buffers
+	 * to clients.
 	 */
 	if (server) {
-		drm_magic_t magic;
-
 		if (!(wl_kms_entity->auth = kms_auth_init(server)))
 			goto error;
-
-		/* get a magic */
-		if (drmGetMagic(fd, &magic) < 0)
-			goto error;
-
-		/* authenticate myself */
-		if (kms_auth_request(wl_kms_entity->auth, magic) < 0)
-			goto error;
+	} else {
+		wl_kms_entity->authenticated = 1;
 	}
 
 	return wl_kms_entity;
